@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Space Biology Explorer</title>
+    <title>WikiVerse - Space Biology Explorer</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap');
 
@@ -212,6 +212,64 @@
             font-weight: 500;
         }
 
+        .knowledge-graph {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 50px;
+            animation: fadeIn 1s ease 0.4s both;
+        }
+
+        .graph-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .graph-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .graph-node {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .graph-node:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            transform: scale(1.05);
+        }
+
+        .node-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .node-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .node-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
         .search-section {
             background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(192, 108, 132, 0.15));
             border: 3px solid rgba(255, 215, 0, 0.3);
@@ -380,13 +438,6 @@
             box-shadow: 0 5px 20px rgba(255, 107, 157, 0.5);
         }
 
-        .no-results {
-            text-align: center;
-            padding: 60px;
-            font-size: 1.3rem;
-            color: #a8dadc;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -410,10 +461,6 @@
                 height: 50px;
                 font-size: 1.5rem;
             }
-            .lang-btn {
-                min-width: 120px;
-                font-size: 0.85rem;
-            }
         }
     </style>
 </head>
@@ -421,7 +468,6 @@
     <div class="stars" id="stars"></div>
     <div class="planet"></div>
 
-    <!-- Language Bar Retractable -->
     <div class="language-bar">
         <div class="lang-menu" id="langMenu">
             <button class="lang-btn active" onclick="changeLanguage('es')" data-lang="es">🇪🇸 Español</button>
@@ -451,10 +497,46 @@
             </div>
         </div>
 
+        <div class="knowledge-graph">
+            <h3 class="graph-title">📊 Gráfica de Conocimiento</h3>
+            <div class="graph-content">
+                <div class="graph-node" onclick="quickSearch('bone')">
+                    <div class="node-icon">🦴</div>
+                    <div class="node-label">Huesos</div>
+                    <div class="node-count" id="boneCount">0</div>
+                </div>
+                <div class="graph-node" onclick="quickSearch('radiation')">
+                    <div class="node-icon">☢️</div>
+                    <div class="node-label">Radiación</div>
+                    <div class="node-count" id="radiationCount">0</div>
+                </div>
+                <div class="graph-node" onclick="quickSearch('plant')">
+                    <div class="node-icon">🌱</div>
+                    <div class="node-label">Plantas</div>
+                    <div class="node-count" id="plantCount">0</div>
+                </div>
+                <div class="graph-node" onclick="quickSearch('immune')">
+                    <div class="node-icon">🛡️</div>
+                    <div class="node-label">Inmune</div>
+                    <div class="node-count" id="immuneCount">0</div>
+                </div>
+                <div class="graph-node" onclick="quickSearch('muscle')">
+                    <div class="node-icon">💪</div>
+                    <div class="node-label">Músculos</div>
+                    <div class="node-count" id="muscleCount">0</div>
+                </div>
+                <div class="graph-node" onclick="quickSearch('cell')">
+                    <div class="node-icon">🔬</div>
+                    <div class="node-label">Células</div>
+                    <div class="node-count" id="cellCount">0</div>
+                </div>
+            </div>
+        </div>
+
         <div class="search-section">
             <h2 class="search-title">Motor de Búsqueda Inteligente</h2>
             <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Busca en español o inglés: planta, bone, radiación, muscle...">
+                <input type="text" class="search-input" id="searchInput" placeholder="Busca en cualquier idioma: planta, bone, Strahlung, 植物...">
                 <button class="search-btn" onclick="searchArticles()">Buscar</button>
             </div>
             <div class="quick-filters">
@@ -475,7 +557,6 @@
 
     <script src="articles-data.js"></script>
     <script>
-        // Sistema de traducciones completo
         const LANG_TEXTS = {
             es: {
                 title: 'WikiVerse',
@@ -483,7 +564,7 @@
                 totalArticles: 'Artículos Totales',
                 results: 'Resultados',
                 searchTitle: 'Motor de Búsqueda Inteligente',
-                searchPlaceholder: 'Busca en español o inglés: planta, bone, radiación, muscle...',
+                searchPlaceholder: 'Busca en cualquier idioma: planta, bone, Strahlung, 植物...',
                 searchBtn: 'Buscar',
                 filterBones: 'Huesos',
                 filterRadiation: 'Radiación',
@@ -491,6 +572,13 @@
                 filterImmune: 'Sistema Inmune',
                 filterMuscle: 'Músculos',
                 filterISS: 'ISS',
+                graphTitle: '📊 Gráfica de Conocimiento',
+                nodeBone: 'Huesos',
+                nodeRadiation: 'Radiación',
+                nodePlant: 'Plantas',
+                nodeImmune: 'Inmune',
+                nodeMuscle: 'Músculos',
+                nodeCell: 'Células',
                 allArticles: 'Todos los Artículos',
                 resultsFor: 'Resultados para',
                 firstArticles: 'Primeros 20 Artículos',
@@ -506,7 +594,7 @@
                 totalArticles: 'Total Articles',
                 results: 'Results',
                 searchTitle: 'Intelligent Search Engine',
-                searchPlaceholder: 'Search in Spanish or English: plant, bone, radiation, muscle...',
+                searchPlaceholder: 'Search in any language: plant, bone, Strahlung, 植物...',
                 searchBtn: 'Search',
                 filterBones: 'Bones',
                 filterRadiation: 'Radiation',
@@ -514,6 +602,13 @@
                 filterImmune: 'Immune System',
                 filterMuscle: 'Muscles',
                 filterISS: 'ISS',
+                graphTitle: '📊 Knowledge Graph',
+                nodeBone: 'Bones',
+                nodeRadiation: 'Radiation',
+                nodePlant: 'Plants',
+                nodeImmune: 'Immune',
+                nodeMuscle: 'Muscles',
+                nodeCell: 'Cells',
                 allArticles: 'All Articles',
                 resultsFor: 'Results for',
                 firstArticles: 'First 20 Articles',
@@ -529,7 +624,7 @@
                 totalArticles: 'कुल लेख',
                 results: 'परिणाम',
                 searchTitle: 'बुद्धिमान खोज इंजन',
-                searchPlaceholder: 'स्पेनिश या अंग्रेजी में खोजें: plant, bone, radiation, muscle...',
+                searchPlaceholder: 'किसी भी भाषा में खोजें: plant, bone, Strahlung, 植物...',
                 searchBtn: 'खोजें',
                 filterBones: 'हड्डियाँ',
                 filterRadiation: 'विकिरण',
@@ -537,6 +632,13 @@
                 filterImmune: 'प्रतिरक्षा प्रणाली',
                 filterMuscle: 'मांसपेशियाँ',
                 filterISS: 'आईएसएस',
+                graphTitle: '📊 ज्ञान ग्राफ',
+                nodeBone: 'हड्डियाँ',
+                nodeRadiation: 'विकिरण',
+                nodePlant: 'पौधे',
+                nodeImmune: 'प्रतिरक्षा',
+                nodeMuscle: 'मांसपेशियाँ',
+                nodeCell: 'कोशिकाएं',
                 allArticles: 'सभी लेख',
                 resultsFor: 'के लिए परिणाम',
                 firstArticles: 'पहले 20 लेख',
@@ -552,7 +654,7 @@
                 totalArticles: '総記事数',
                 results: '結果',
                 searchTitle: 'インテリジェント検索エンジン',
-                searchPlaceholder: 'スペイン語または英語で検索: plant, bone, radiation, muscle...',
+                searchPlaceholder: 'どの言語でも検索: plant, bone, Strahlung, 植物...',
                 searchBtn: '検索',
                 filterBones: '骨',
                 filterRadiation: '放射線',
@@ -560,6 +662,13 @@
                 filterImmune: '免疫システム',
                 filterMuscle: '筋肉',
                 filterISS: 'ISS',
+                graphTitle: '📊 知識グラフ',
+                nodeBone: '骨',
+                nodeRadiation: '放射線',
+                nodePlant: '植物',
+                nodeImmune: '免疫',
+                nodeMuscle: '筋肉',
+                nodeCell: '細胞',
                 allArticles: 'すべての記事',
                 resultsFor: 'の検索結果',
                 firstArticles: '最初の20記事',
@@ -575,7 +684,7 @@
                 totalArticles: 'Gesamte Artikel',
                 results: 'Ergebnisse',
                 searchTitle: 'Intelligente Suchmaschine',
-                searchPlaceholder: 'Auf Spanisch oder Englisch suchen: plant, bone, radiation, muscle...',
+                searchPlaceholder: 'In jeder Sprache suchen: plant, bone, Strahlung, 植物...',
                 searchBtn: 'Suchen',
                 filterBones: 'Knochen',
                 filterRadiation: 'Strahlung',
@@ -583,10 +692,17 @@
                 filterImmune: 'Immunsystem',
                 filterMuscle: 'Muskeln',
                 filterISS: 'ISS',
+                graphTitle: '📊 Wissensgraph',
+                nodeBone: 'Knochen',
+                nodeRadiation: 'Strahlung',
+                nodePlant: 'Pflanzen',
+                nodeImmune: 'Immun',
+                nodeMuscle: 'Muskeln',
+                nodeCell: 'Zellen',
                 allArticles: 'Alle Artikel',
                 resultsFor: 'Ergebnisse für',
                 firstArticles: 'Erste 20 Artikel',
-                viewArticle: 'Vollständigen Artikel anzeigen',
+                viewArticle: 'Vollständigen Artikel Anzeigen',
                 whyRelevant: 'Warum es relevant ist:',
                 relevant: 'Relevant',
                 noResults: 'Keine genauen Ergebnisse gefunden für',
@@ -598,7 +714,7 @@
                 totalArticles: 'Articoli Totali',
                 results: 'Risultati',
                 searchTitle: 'Motore di Ricerca Intelligente',
-                searchPlaceholder: 'Cerca in spagnolo o inglese: plant, bone, radiation, muscle...',
+                searchPlaceholder: 'Cerca in qualsiasi lingua: plant, bone, Strahlung, 植物...',
                 searchBtn: 'Cerca',
                 filterBones: 'Ossa',
                 filterRadiation: 'Radiazione',
@@ -606,6 +722,13 @@
                 filterImmune: 'Sistema Immunitario',
                 filterMuscle: 'Muscoli',
                 filterISS: 'ISS',
+                graphTitle: '📊 Grafico della Conoscenza',
+                nodeBone: 'Ossa',
+                nodeRadiation: 'Radiazione',
+                nodePlant: 'Piante',
+                nodeImmune: 'Immunitario',
+                nodeMuscle: 'Muscoli',
+                nodeCell: 'Cellule',
                 allArticles: 'Tutti gli Articoli',
                 resultsFor: 'Risultati per',
                 firstArticles: 'Primi 20 Articoli',
@@ -617,57 +740,9 @@
             }
         };
 
-        let currentLang = 'es';
-
-        function toggleLanguageMenu() {
-            const menu = document.getElementById('langMenu');
-            menu.classList.toggle('open');
-        }
-
-        function changeLanguage(lang) {
-            currentLang = lang;
-            
-            // Cerrar el menú después de seleccionar
-            document.getElementById('langMenu').classList.remove('open');
-            
-            // Actualizar botones de idioma
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.lang === lang) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // Actualizar todos los textos de la interfaz
-            const texts = LANG_TEXTS[lang];
-            document.querySelector('header h1').textContent = texts.title;
-            document.querySelector('header p').textContent = texts.subtitle;
-            document.querySelectorAll('.stat-label')[0].textContent = texts.totalArticles;
-            document.querySelectorAll('.stat-label')[1].textContent = texts.results;
-            document.querySelector('.search-title').textContent = texts.searchTitle;
-            document.getElementById('searchInput').placeholder = texts.searchPlaceholder;
-            document.querySelector('.search-btn').textContent = texts.searchBtn;
-            
-            // Actualizar botones de filtro rápido
-            const filters = document.querySelectorAll('.filter-btn');
-            filters[0].textContent = texts.filterBones;
-            filters[1].textContent = texts.filterRadiation;
-            filters[2].textContent = texts.filterPlants;
-            filters[3].textContent = texts.filterImmune;
-            filters[4].textContent = texts.filterMuscle;
-            filters[5].textContent = texts.filterISS;
-
-            // Recargar resultados con el nuevo idioma
-            const query = document.getElementById('searchInput').value;
-            if (query) {
-                searchArticles();
-            } else {
-                displayResults(ARTICLES.slice(0, 20), texts.firstArticles);
-            }
-        }
-
-        // Diccionario español-inglés para búsquedas
+        // DICCIONARIO MASIVO MULTILINGÜE (Español, Inglés, Alemán, Hindi, Japonés, Italiano)
         const TRANSLATIONS = {
+            // ESPAÑOL → INGLÉS
             'planta': 'plant', 'plantas': 'plant',
             'hueso': 'bone', 'huesos': 'bone',
             'musculo': 'muscle', 'musculos': 'muscle', 'músculo': 'muscle', 'músculos': 'muscle',
@@ -683,11 +758,11 @@
             'higado': 'liver', 'hígado': 'liver',
             'riñon': 'kidney', 'riñones': 'kidney',
             'sangre': 'blood',
-            'inmune': 'immune', 'inmunidad': 'immune',
+            'inmune': 'immune', 'inmunidad': 'immune', 'inmunologico': 'immune',
             'bacteria': 'bacteria', 'bacterias': 'bacteria',
             'hongo': 'fungi', 'hongos': 'fungi',
             'virus': 'virus',
-            'gen': 'gene', 'genes': 'gene',
+            'gen': 'gene', 'genes': 'gene', 'genetica': 'genetic', 'genético': 'genetic',
             'adn': 'dna', 'ADN': 'DNA',
             'proteina': 'protein', 'proteínas': 'protein',
             'astronauta': 'astronaut', 'astronautas': 'astronaut',
@@ -720,19 +795,243 @@
             'carbono': 'carbon',
             'calcio': 'calcium',
             'hierro': 'iron',
-            'iss': 'space station',
             'nasa': 'nasa',
             'marte': 'mars',
             'luna': 'lunar moon',
             'tierra': 'earth',
-            'vacio': 'vacuum space void',
-            'vacío': 'vacuum space void',
-            'constelacion': 'constellation stellar star',
-            'constelación': 'constellation stellar star',
-            'presion': 'pressure atmospheric',
-            'presión': 'pressure atmospheric',
-            'carta': 'chart map cartography paper letter'
+            'cardiovascular': 'cardiovascular',
+            'neuronal': 'neural neuron',
+            'molecular': 'molecular',
+            'tisular': 'tissue',
+            
+            // ALEMÁN → INGLÉS
+            'pflanze': 'plant', 'pflanzen': 'plant',
+            'knochen': 'bone',
+            'muskel': 'muscle', 'muskeln': 'muscle',
+            'strahlung': 'radiation',
+            'schwerkraft': 'gravity microgravity',
+            'mikrogravitation': 'microgravity',
+            'raum': 'space',
+            'station': 'station',
+            'zelle': 'cell', 'zellen': 'cell',
+            'gehirn': 'brain',
+            'herz': 'heart',
+            'leber': 'liver',
+            'niere': 'kidney',
+            'blut': 'blood',
+            'immun': 'immune', 'immunsystem': 'immune',
+            'bakterien': 'bacteria',
+            'pilze': 'fungi',
+            'gen': 'gene',
+            'protein': 'protein',
+            'astronaut': 'astronaut',
+            'flug': 'flight',
+            'mission': 'mission',
+            'wachstum': 'growth',
+            'gesundheit': 'health',
+            'krankheit': 'disease',
+            'stress': 'stress',
+            'wurzel': 'root',
+            'blatt': 'leaf',
+            'samen': 'seed',
+            'licht': 'light',
+            'wasser': 'water',
+            'sauerstoff': 'oxygen',
+            
+            // HINDI → INGLÉS
+            'पौधा': 'plant', 'पौधे': 'plant',
+            'हड्डी': 'bone', 'हड्डियाँ': 'bone',
+            'मांसपेशी': 'muscle', 'मांसपेशियाँ': 'muscle',
+            'विकिरण': 'radiation',
+            'सूक्ष्म': 'micro microgravity',
+            'गुरुत्वाकर्षण': 'gravity',
+            'अंतरिक्ष': 'space',
+            'स्टेशन': 'station',
+            'कोशिका': 'cell', 'कोशिकाएं': 'cell',
+            'मस्तिष्क': 'brain',
+            'हृदय': 'heart',
+            'यकृत': 'liver',
+            'गुर्दा': 'kidney',
+            'रक्त': 'blood',
+            'प्रतिरक्षा': 'immune',
+            'बैक्टीरिया': 'bacteria',
+            'कवक': 'fungi',
+            'जीन': 'gene',
+            'प्रोटीन': 'protein',
+            'अंतरिक्ष यात्री': 'astronaut',
+            'उड़ान': 'flight',
+            'मिशन': 'mission',
+            'विकास': 'growth development',
+            'स्वास्थ्य': 'health',
+            'रोग': 'disease',
+            'तनाव': 'stress',
+            'जड़': 'root',
+            'पत्ती': 'leaf',
+            'बीज': 'seed',
+            'प्रकाश': 'light',
+            'पानी': 'water',
+            'ऑक्सीजन': 'oxygen',
+            
+            // JAPONÉS → INGLÉS
+            '植物': 'plant',
+            '骨': 'bone',
+            '筋肉': 'muscle',
+            '放射線': 'radiation',
+            '微小重力': 'microgravity',
+            '重力': 'gravity',
+            '宇宙': 'space',
+            'ステーション': 'station',
+            '細胞': 'cell',
+            '脳': 'brain',
+            '心臓': 'heart',
+            '肝臓': 'liver',
+            '腎臓': 'kidney',
+            '血液': 'blood',
+            '免疫': 'immune',
+            'バクテリア': 'bacteria',
+            '真菌': 'fungi',
+            '遺伝子': 'gene',
+            'タンパク質': 'protein',
+            '宇宙飛行士': 'astronaut',
+            '飛行': 'flight',
+            'ミッション': 'mission',
+            '成長': 'growth',
+            '健康': 'health',
+            '病気': 'disease',
+            'ストレス': 'stress',
+            '根': 'root',
+            '葉': 'leaf',
+            '種子': 'seed',
+            '光': 'light',
+            '水': 'water',
+            '酸素': 'oxygen',
+            
+            // ITALIANO → INGLÉS
+            'pianta': 'plant', 'piante': 'plant',
+            'osso': 'bone', 'ossa': 'bone',
+            'muscolo': 'muscle', 'muscoli': 'muscle',
+            'radiazione': 'radiation', 'radiazioni': 'radiation',
+            'microgravità': 'microgravity',
+            'gravità': 'gravity',
+            'spazio': 'space',
+            'stazione': 'station',
+            'cellula': 'cell', 'cellule': 'cell',
+            'cervello': 'brain',
+            'cuore': 'heart',
+            'fegato': 'liver',
+            'rene': 'kidney', 'reni': 'kidney',
+            'sangue': 'blood',
+            'immunitario': 'immune', 'immunità': 'immune',
+            'batterio': 'bacteria', 'batteri': 'bacteria',
+            'fungo': 'fungi', 'funghi': 'fungi',
+            'gene': 'gene', 'geni': 'gene',
+            'proteina': 'protein', 'proteine': 'protein',
+            'astronauta': 'astronaut',
+            'volo': 'flight',
+            'missione': 'mission',
+            'crescita': 'growth',
+            'salute': 'health',
+            'malattia': 'disease',
+            'radice': 'root', 'radici': 'root',
+            'foglia': 'leaf', 'foglie': 'leaf',
+            'seme': 'seed', 'semi': 'seed',
+            'luce': 'light',
+            'acqua': 'water',
+            'ossigeno': 'oxygen',
+            
+            // KEYWORDS ADICIONALES IMPORTANTES
+            'tissue': 'tissue',
+            'organ': 'organ',
+            'metabolism': 'metabolism',
+            'molecular': 'molecular',
+            'cellular': 'cellular cell',
+            'neural': 'neural neuron',
+            'cardiovascular': 'cardiovascular heart',
+            'skeletal': 'skeletal bone',
+            'muscular': 'muscular muscle',
+            'respiratory': 'respiratory lung',
+            'digestive': 'digestive',
+            'experiment': 'experiment',
+            'study': 'study',
+            'research': 'research',
+            'effect': 'effect',
+            'response': 'response',
+            'adaptation': 'adaptation',
+            'expression': 'expression gene',
+            'regulation': 'regulation',
+            'pathway': 'pathway',
+            'signaling': 'signaling signal',
+            'oxidative': 'oxidative stress',
+            'inflammation': 'inflammation',
+            'apoptosis': 'apoptosis',
+            'proliferation': 'proliferation',
+            'differentiation': 'differentiation',
+            'regeneration': 'regeneration',
+            'aging': 'aging age',
+            'senescence': 'senescence',
+            'morphology': 'morphology',
+            'physiology': 'physiology',
+            'biochemistry': 'biochemistry',
+            'biophysics': 'biophysics',
+            'genomics': 'genomics genome',
+            'proteomics': 'proteomics',
+            'transcriptomics': 'transcriptomics',
+            'metabolomics': 'metabolomics'
         };
+
+        let currentLang = 'es';
+
+        function toggleLanguageMenu() {
+            const menu = document.getElementById('langMenu');
+            menu.classList.toggle('open');
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            
+            document.getElementById('langMenu').classList.remove('open');
+            
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.lang === lang) {
+                    btn.classList.add('active');
+                }
+            });
+
+            const texts = LANG_TEXTS[lang];
+            document.querySelector('header h1').textContent = texts.title;
+            document.querySelector('header p').textContent = texts.subtitle;
+            document.querySelectorAll('.stat-label')[0].textContent = texts.totalArticles;
+            document.querySelectorAll('.stat-label')[1].textContent = texts.results;
+            document.querySelector('.graph-title').textContent = texts.graphTitle;
+            
+            const nodeLabels = document.querySelectorAll('.node-label');
+            nodeLabels[0].textContent = texts.nodeBone;
+            nodeLabels[1].textContent = texts.nodeRadiation;
+            nodeLabels[2].textContent = texts.nodePlant;
+            nodeLabels[3].textContent = texts.nodeImmune;
+            nodeLabels[4].textContent = texts.nodeMuscle;
+            nodeLabels[5].textContent = texts.nodeCell;
+            
+            document.querySelector('.search-title').textContent = texts.searchTitle;
+            document.getElementById('searchInput').placeholder = texts.searchPlaceholder;
+            document.querySelector('.search-btn').textContent = texts.searchBtn;
+            
+            const filters = document.querySelectorAll('.filter-btn');
+            filters[0].textContent = texts.filterBones;
+            filters[1].textContent = texts.filterRadiation;
+            filters[2].textContent = texts.filterPlants;
+            filters[3].textContent = texts.filterImmune;
+            filters[4].textContent = texts.filterMuscle;
+            filters[5].textContent = texts.filterISS;
+
+            const query = document.getElementById('searchInput').value;
+            if (query) {
+                searchArticles();
+            } else {
+                displayResults(ARTICLES.slice(0, 20), texts.firstArticles);
+            }
+        }
 
         function translateQuery(query) {
             const words = query.toLowerCase().split(/\s+/);
@@ -788,33 +1087,33 @@
                 queryWords.forEach(word => {
                     if (titleLower.includes(word)) {
                         const matches = (titleLower.match(new RegExp(word, 'gi')) || []).length;
-                        score += 15 * matches;
-                        matchReasons.push(`"${word}" encontrado`);
+                        score += 20 * matches;
+                        matchReasons.push(`"${word}"`);
                     } else {
                         const words = titleLower.split(/\s+/);
                         words.forEach(titleWord => {
                             if (titleWord.includes(word) && word.length > 2) {
-                                score += 5;
-                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                                score += 8;
+                                matchReasons.push(`≈"${word}"`);
                             }
-                            if (word.includes(titleWord) && titleWord.length > 2) {
-                                score += 5;
-                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                            if (word.includes(titleWord) && titleWord.length > 3) {
+                                score += 6;
+                                matchReasons.push(`≈"${word}"`);
                             }
                         });
                     }
                 });
 
                 if (titleLower.includes(query) || titleLower.includes(translatedQuery)) {
-                    score += 30;
-                    matchReasons.push('coincidencia exacta');
+                    score += 40;
+                    matchReasons.push('exacta');
                 }
 
                 if (matchReasons.length > 1) {
-                    score += 10;
+                    score += 15;
                 }
 
-                const relevance = score > 0 ? Math.min(100, Math.round((score / 20) * 10)) : 0;
+                const relevance = score > 0 ? Math.min(100, Math.round((score / 25) * 10)) : 0;
 
                 return { ...article, score, relevance, matchReasons: [...new Set(matchReasons)] };
             });
@@ -854,13 +1153,35 @@
             document.getElementById('resultsContainer').innerHTML = html;
         }
 
+        function updateKnowledgeGraph() {
+            const keywords = {
+                bone: ['bone', 'skeletal', 'osteo', 'knochen', 'हड्डी', '骨', 'osso'],
+                radiation: ['radiation', 'cosmic', 'strahlung', 'विकिरण', '放射線', 'radiazione'],
+                plant: ['plant', 'arabidopsis', 'pflanze', 'पौधा', '植物', 'pianta'],
+                immune: ['immune', 'immunity', 'immun', 'प्रतिरक्षा', '免疫', 'immunitario'],
+                muscle: ['muscle', 'muscular', 'muskel', 'मांसपेशी', '筋肉', 'muscolo'],
+                cell: ['cell', 'cellular', 'zelle', 'कोशिका', '細胞', 'cellula']
+            };
+
+            Object.keys(keywords).forEach(key => {
+                let count = 0;
+                ARTICLES.forEach(article => {
+                    const titleLower = article.Title.toLowerCase();
+                    if (keywords[key].some(kw => titleLower.includes(kw))) {
+                        count++;
+                    }
+                });
+                document.getElementById(`${key}Count`).textContent = count;
+            });
+        }
+
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') searchArticles();
         });
 
         createStars();
+        updateKnowledgeGraph();
         displayResults(ARTICLES.slice(0, 20), LANG_TEXTS[currentLang].firstArticles);
     </script>
 </body>
-
 </html>
