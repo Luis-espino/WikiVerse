@@ -1118,7 +1118,7 @@
                 return { ...article, score, relevance, matchReasons: [...new Set(matchReasons)] };
             });
 
-            const filtered = results.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 30);
+            const filtered = results.filter(r => r.score > 0).sort((a, b) => b.score - a.score);
 
             if (filtered.length === 0) {
                 const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10);
@@ -1185,3 +1185,4 @@
     </script>
 </body>
 </html>
+
