@@ -745,7 +745,11 @@
             const results = ARTICLES.map(article => {
                 let score = 0;
                 let matchReasons = [];
-                const titleLower = article.Title.toLowerCase();
+                
+                // Manejar ambos formatos: Title y "Title"
+                const title = article.Title || article["Title"] || "";
+                const link = article.Link || article["Link"] || "";
+                const titleLower = title.toLowerCase();
 
                 queryWords.forEach(word => {
                     if (titleLower.includes(word)) {
@@ -778,13 +782,22 @@
 
                 const relevance = score > 0 ? Math.min(100, Math.round((score / 20) * 10)) : 0;
 
-                return { ...article, score, relevance, matchReasons: [...new Set(matchReasons)] };
+                return { 
+                    Title: title,
+                    Link: link,
+                    score, 
+                    relevance, 
+                    matchReasons: [...new Set(matchReasons)] 
+                };
             });
 
             const filtered = results.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 30);
 
             if (filtered.length === 0) {
-                const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10);
+                const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10).map(article => ({
+                    Title: article.Title || article["Title"] || "",
+                    Link: article.Link || article["Link"] || ""
+                }));
                 displayResults(randomArticles, `No se encontraron resultados exactos para "${query}". Aquí hay artículos que podrían interesarte:`);
                 document.getElementById('resultsCount').textContent = '10';
             } else {
@@ -797,6 +810,10 @@
             document.getElementById('resultsHeader').textContent = headerText;
             
             const html = articles.map(article => {
+                // Manejar ambos formatos: Title y "Title"
+                const title = article.Title || article["Title"] || "Sin título";
+                const link = article.Link || article["Link"] || "#";
+                
                 const badge = article.relevance ? `<div class="relevance-badge">${article.relevance}% Relevante</div>` : '';
                 const why = article.matchReasons && article.matchReasons.length > 0 
                     ? `<div class="why-relevant"><strong>Por qué es relevante:</strong> ${article.matchReasons.join(', ')}</div>` 
@@ -805,9 +822,9 @@
                 return `
                     <div class="article-card">
                         ${badge}
-                        <h3 class="article-title">${article.Title}</h3>
+                        <h3 class="article-title">${title}</h3>
                         ${why}
-                        <a href="${article.Link}" target="_blank" class="article-link">Ver Artículo Completo</a>
+                        <a href="${link}" target="_blank" class="article-link">Ver Artículo Completo</a>
                     </div>
                 `;
             }).join('');
@@ -821,7 +838,13 @@
 
         createStars();
         initKnowledgeGraph();
-        displayResults(ARTICLES.slice(0, 20), 'Primeros 20 Artículos');
+        
+        // Cargar artículos iniciales manejando ambos formatos
+        const initialArticles = ARTICLES.slice(0, 20).map(article => ({
+            Title: article.Title || article["Title"] || "",
+            Link: article.Link || article["Link"] || ""
+        }));
+        displayResults(initialArticles, 'Primeros 20 Artículos');
     </script>
 </body>
 </html>
