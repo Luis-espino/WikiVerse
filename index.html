@@ -3,134 +3,825 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Bioscience Research Dashboard</title>
+    <title>NASA Space Biology Explorer</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg, #0B3D91 0%, #1a5490 50%, #2e5f8e 100%); min-height: 100vh; color: #fff; }
-        .stars { position: fixed; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 1; }
-        .star { position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%; animation: twinkle 3s infinite; }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-        .language-bar { position: fixed; bottom: 30px; right: 30px; z-index: 100; display: flex; flex-direction: column; align-items: flex-end; gap: 15px; }
-        .lang-toggle { width: 60px; height: 60px; background: linear-gradient(135deg, #FC3D21, #E13D30); border: 3px solid rgba(252, 61, 33, 0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5rem; box-shadow: 0 10px 30px rgba(252, 61, 33, 0.4); transition: all 0.3s ease; }
-        .lang-toggle:hover { transform: scale(1.1); }
-        .lang-menu { display: flex; flex-direction: column; gap: 10px; background: rgba(11, 61, 145, 0.95); backdrop-filter: blur(10px); padding: 15px; border-radius: 20px; border: 2px solid rgba(252, 61, 33, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s ease; }
-        .lang-menu.open { opacity: 1; transform: translateY(0); pointer-events: all; }
-        .lang-btn { padding: 12px 20px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-align: left; min-width: 140px; }
-        .lang-btn:hover { background: rgba(252, 61, 33, 0.2); border-color: #FC3D21; transform: translateX(-5px); }
-        .lang-btn.active { background: linear-gradient(135deg, #FC3D21, #E13D30); color: white; border-color: #FC3D21; }
-        .container { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
-        header { text-align: center; margin-bottom: 40px; animation: fadeInDown 1s ease; }
-        .nasa-logo { font-size: 2.8rem; font-weight: 800; color: #FC3D21; margin-bottom: 10px; letter-spacing: 8px; }
-        header h1 { font-size: 2.5rem; font-weight: 700; color: #fff; margin-bottom: 15px; }
-        header p { font-size: 1.1rem; color: #a8dadc; font-weight: 500; max-width: 800px; margin: 0 auto; line-height: 1.6; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; animation: fadeIn 1s ease 0.3s both; }
-        .stat-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 25px; text-align: center; transition: all 0.3s ease; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); border-color: #FC3D21; }
-        .stat-number { font-size: 2.5rem; font-weight: 800; color: #FC3D21; display: block; margin-bottom: 8px; }
-        .stat-label { font-size: 0.95rem; color: #a8dadc; font-weight: 600; }
-        .knowledge-graph { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 2px solid rgba(252, 61, 33, 0.3); border-radius: 20px; padding: 30px; margin-bottom: 40px; animation: fadeIn 1s ease 0.4s both; min-height: 500px; }
-        .graph-title { font-size: 1.4rem; font-weight: 700; color: #FC3D21; margin-bottom: 25px; text-align: center; }
-        #graphCanvas { width: 100%; height: 450px; position: relative; }
-        .graph-node-visual { position: absolute; width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-weight: 600; font-size: 0.75rem; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: 3px solid rgba(255, 255, 255, 0.3); z-index: 5; }
-        .graph-node-visual:hover { transform: scale(1.3); z-index: 10; box-shadow: 0 8px 25px rgba(252, 61, 33, 0.5); border-color: #FC3D21; }
-        .graph-node-visual .node-icon { font-size: 2rem; margin-bottom: 5px; }
-        .graph-node-visual .node-text { font-size: 0.7rem; font-weight: 700; color: white; }
-        .graph-node-visual .node-count-badge { font-size: 0.75rem; font-weight: 700; background: rgba(0, 0, 0, 0.7); padding: 3px 8px; border-radius: 10px; margin-top: 3px; color: white; }
-        .graph-line { position: absolute; height: 2px; background: linear-gradient(90deg, rgba(252, 61, 33, 0.3), rgba(168, 218, 220, 0.3)); transform-origin: left center; pointer-events: none; z-index: 1; }
-        .search-section { background: linear-gradient(135deg, rgba(252, 61, 33, 0.15), rgba(225, 61, 48, 0.15)); border: 2px solid rgba(252, 61, 33, 0.3); border-radius: 20px; padding: 35px; margin-bottom: 40px; animation: fadeIn 1s ease 0.5s both; }
-        .search-title { font-size: 1.6rem; font-weight: 700; color: #FC3D21; margin-bottom: 20px; text-align: center; }
-        .search-box { display: flex; gap: 15px; margin-bottom: 25px; }
-        .search-input { flex: 1; padding: 18px 25px; font-size: 1rem; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.95); color: #0B3D91; font-family: 'Inter', sans-serif; font-weight: 500; transition: all 0.3s ease; }
-        .search-input:focus { outline: none; border-color: #FC3D21; box-shadow: 0 0 20px rgba(252, 61, 33, 0.3); }
-        .search-btn { padding: 18px 35px; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #FC3D21, #E13D30); color: white; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; font-family: 'Inter', sans-serif; }
-        .search-btn:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(252, 61, 33, 0.5); }
-        .quick-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-        .filter-btn { padding: 12px 18px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: 'Inter', sans-serif; font-size: 0.85rem; }
-        .filter-btn:hover { background: rgba(252, 61, 33, 0.2); border-color: #FC3D21; transform: translateY(-2px); }
-        .results-section { animation: fadeIn 1s ease 0.7s both; }
-        .results-header { font-size: 1.6rem; font-weight: 700; color: #FC3D21; margin-bottom: 25px; text-align: center; }
-        .article-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .article-card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 15px; padding: 25px; transition: all 0.3s ease; }
-        .article-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); border-color: #FC3D21; }
-        .article-title { font-size: 1.1rem; font-weight: 700; color: #FC3D21; margin-bottom: 15px; line-height: 1.4; }
-        .why-relevant { background: rgba(252, 61, 33, 0.1); border-left: 3px solid #FC3D21; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-size: 0.85rem; color: #a8dadc; font-weight: 500; }
-        .article-link { display: inline-block; background: linear-gradient(135deg, #FC3D21, #E13D30); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease; }
-        .article-link:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(252, 61, 33, 0.5); }
-        .ai-summary { background: rgba(252, 61, 33, 0.1); border: 2px solid rgba(252, 61, 33, 0.3); border-radius: 15px; padding: 20px; margin-bottom: 30px; }
-        .ai-summary h3 { color: #FC3D21; font-size: 1.2rem; margin-bottom: 12px; }
-        .ai-summary p { color: #a8dadc; font-size: 0.95rem; line-height: 1.6; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { .nasa-logo { font-size: 2rem; } header h1 { font-size: 1.8rem; } .article-grid { grid-template-columns: 1fr; } .search-box { flex-direction: column; } .graph-node-visual { width: 70px; height: 70px; } }
+        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(180deg, #0a1628 0%, #1e3a5f 50%, #2e5984 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .planet {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+            border-radius: 50%;
+            top: 10%;
+            right: 5%;
+            opacity: 0.3;
+            z-index: 2;
+            box-shadow: 0 0 60px rgba(255, 107, 157, 0.4);
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease;
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffd700, #ffaa00, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        header p {
+            font-size: 1.3rem;
+            color: #a8dadc;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+            animation: fadeIn 1s ease 0.3s both;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: #ffd700;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffd700;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #a8dadc;
+            font-weight: 500;
+        }
+
+        .knowledge-graph-section {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 1s ease 0.4s both;
+        }
+
+        .graph-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .graph-subtitle {
+            text-align: center;
+            color: #a8dadc;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        #knowledgeGraph {
+            width: 100%;
+            height: 600px;
+            background: rgba(10, 22, 40, 0.5);
+            border-radius: 20px;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .graph-controls {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(192, 108, 132, 0.15));
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-radius: 30px;
+            padding: 40px;
+            margin-bottom: 50px;
+            animation: fadeIn 1s ease 0.5s both;
+        }
+
+        .search-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 20px 25px;
+            font-size: 1.1rem;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0a1628;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-btn {
+            padding: 20px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0a1628;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .quick-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .filter-btn {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.95rem;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            transform: translateY(-3px);
+        }
+
+        .results-section {
+            animation: fadeIn 1s ease 0.7s both;
+        }
+
+        .results-header {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .article-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .article-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .article-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border-color: #ffd700;
+        }
+
+        .relevance-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #0a1628;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            padding-right: 80px;
+        }
+
+        .why-relevant {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 3px solid #ffd700;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: #ffd700;
+            font-weight: 500;
+        }
+
+        .article-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b9d, #c06c84);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .article-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.5);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.3rem;
+            color: #a8dadc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.5rem; }
+            .article-grid { grid-template-columns: 1fr; }
+            .search-box { flex-direction: column; }
+            #knowledgeGraph { height: 400px; }
+        }
     </style>
 </head>
 <body>
     <div class="stars" id="stars"></div>
-    <div class="language-bar">
-        <div class="lang-menu" id="langMenu">
-            <button class="lang-btn active" onclick="changeLanguage('es')" data-lang="es">Español</button>
-            <button class="lang-btn" onclick="changeLanguage('en')" data-lang="en">English</button>
-            <button class="lang-btn" onclick="changeLanguage('it')" data-lang="it">Italiano</button>
-            <button class="lang-btn" onclick="changeLanguage('de')" data-lang="de">Deutsch</button>
-            <button class="lang-btn" onclick="changeLanguage('hi')" data-lang="hi">हिन्दी</button>
-            <button class="lang-btn" onclick="changeLanguage('ja')" data-lang="ja">日本語</button>
-        </div>
-        <div class="lang-toggle" onclick="toggleLanguageMenu()">🌐</div>
-    </div>
+    <div class="planet"></div>
+
     <div class="container">
         <header>
-            <div class="nasa-logo">NASA</div>
-            <h1 id="mainTitle">Bioscience Research Dashboard</h1>
-            <p id="mainSubtitle">Explore impacts and results from space biology experiments using AI-powered knowledge graphs and intelligent search</p>
+            <h1>NASA Space Biology Explorer</h1>
+            <p>Descubre los secretos de la vida en el espacio</p>
         </header>
-        <div class="dashboard-grid">
-            <div class="stat-card"><span class="stat-number">608</span><span class="stat-label" id="labelPubs">Publications</span></div>
-            <div class="stat-card"><span class="stat-number" id="resultsCount">608</span><span class="stat-label" id="labelResults">Results</span></div>
-            <div class="stat-card"><span class="stat-number">12</span><span class="stat-label" id="labelTopics">Research Topics</span></div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number">608</span>
+                <span class="stat-label">Artículos Totales</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="resultsCount">608</span>
+                <span class="stat-label">Resultados</span>
+            </div>
         </div>
-        <div class="ai-summary">
-            <h3>AI Research Summary</h3>
-            <p id="aiSummaryText">This dashboard analyzes 608 NASA bioscience publications focusing on the effects of spaceflight on biological systems. Key research areas include bone density changes in microgravity, radiation impacts on cellular function, plant growth in space environments, immune system adaptations, and muscle atrophy prevention strategies.</p>
+
+        <div class="knowledge-graph-section">
+            <h2 class="graph-title">🧠 Gráfico de Conocimiento Interactivo</h2>
+            <p class="graph-subtitle">Explora las conexiones entre temas de investigación espacial. Haz clic en cualquier nodo para buscar artículos relacionados.</p>
+            <div id="knowledgeGraph"></div>
+            <div class="graph-controls">
+                <button class="filter-btn" onclick="resetGraph()">🔄 Reiniciar Vista</button>
+                <button class="filter-btn" onclick="togglePhysics()">⚡ Física On/Off</button>
+                <button class="filter-btn" onclick="fitGraph()">🎯 Centrar</button>
+            </div>
         </div>
-        <div class="knowledge-graph">
-            <h3 class="graph-title" id="graphTitle">Knowledge Graph: Research Areas</h3>
-            <div id="graphCanvas"></div>
-        </div>
+
         <div class="search-section">
-            <h2 class="search-title" id="searchTitle">Intelligent Multi-Language Search</h2>
+            <h2 class="search-title">Motor de Búsqueda Inteligente</h2>
             <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search in any language: plant, hueso, Strahlung, 植物...">
-                <button class="search-btn" id="searchBtn" onclick="searchArticles()">Search</button>
+                <input type="text" class="search-input" id="searchInput" placeholder="Busca en español o inglés: planta, bone, radiación, muscle...">
+                <button class="search-btn" onclick="searchArticles()">Buscar</button>
             </div>
             <div class="quick-filters">
-                <button class="filter-btn" onclick="quickSearch('microgravity bone')">Bone Health</button>
-                <button class="filter-btn" onclick="quickSearch('radiation')">Radiation</button>
-                <button class="filter-btn" onclick="quickSearch('plant')">Plant Biology</button>
-                <button class="filter-btn" onclick="quickSearch('immune')">Immune System</button>
-                <button class="filter-btn" onclick="quickSearch('muscle')">Muscle</button>
-                <button class="filter-btn" onclick="quickSearch('cardiovascular')">Cardiovascular</button>
+                <button class="filter-btn" onclick="quickSearch('microgravity bone')">Huesos</button>
+                <button class="filter-btn" onclick="quickSearch('radiation')">Radiación</button>
+                <button class="filter-btn" onclick="quickSearch('plant')">Plantas</button>
+                <button class="filter-btn" onclick="quickSearch('immune')">Sistema Inmune</button>
+                <button class="filter-btn" onclick="quickSearch('muscle')">Músculos</button>
+                <button class="filter-btn" onclick="quickSearch('Space Station')">ISS</button>
             </div>
         </div>
-        <div class="results-section"><h2 class="results-header" id="resultsHeader">All Publications (608)</h2><div class="article-grid" id="resultsContainer"></div></div>
+
+        <div class="results-section">
+            <h2 class="results-header" id="resultsHeader">Todos los Artículos (608)</h2>
+            <div class="article-grid" id="resultsContainer"></div>
+        </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
     <script src="articles-data.js"></script>
     <script>
-const L={es:{title:'Panel de Investigación Biocientífica',subtitle:'Explora impactos de experimentos de biología espacial',aiSummary:'Este dashboard analiza 608 publicaciones NASA sobre efectos del vuelo espacial. Áreas clave: densidad ósea, radiación, plantas, sistema inmune, atrofia muscular.',graphTitle:'Gráfico de Conocimiento',searchTitle:'Búsqueda Inteligente',searchBtn:'Buscar',publications:'Publicaciones',results:'Resultados',topics:'Temas',nodeBone:'Huesos',nodeRadiation:'Radiación',nodePlant:'Plantas',nodeImmune:'Inmune',nodeMuscle:'Músculo',nodeCell:'Células',viewArticle:'Ver',whyRelevant:'Relevante:'},en:{title:'Bioscience Research Dashboard',subtitle:'Explore space biology experiments',aiSummary:'Dashboard analyzes 608 NASA publications on spaceflight effects. Key areas: bone density, radiation, plants, immune system, muscle atrophy.',graphTitle:'Knowledge Graph',searchTitle:'Intelligent Search',searchBtn:'Search',publications:'Publications',results:'Results',topics:'Topics',nodeBone:'Bones',nodeRadiation:'Radiation',nodePlant:'Plants',nodeImmune:'Immune',nodeMuscle:'Muscle',nodeCell:'Cells',viewArticle:'View',whyRelevant:'Relevant:'},it:{title:'Dashboard Ricerca',subtitle:'Esperimenti biologia spaziale',aiSummary:'Dashboard analizza 608 pubblicazioni NASA. Aree: densità ossea, radiazioni, piante, sistema immunitario, atrofia muscolare.',graphTitle:'Grafico Conoscenza',searchTitle:'Ricerca',searchBtn:'Cerca',publications:'Pubblicazioni',results:'Risultati',topics:'Argomenti',nodeBone:'Ossa',nodeRadiation:'Radiazione',nodePlant:'Piante',nodeImmune:'Immunitario',nodeMuscle:'Muscoli',nodeCell:'Cellule',viewArticle:'Vedi',whyRelevant:'Rilevante:'},de:{title:'Forschungs-Dashboard',subtitle:'Weltraumbiologie-Experimente',aiSummary:'Dashboard analysiert 608 NASA-Publikationen. Bereiche: Knochendichte, Strahlung, Pflanzen, Immunsystem, Muskelatrophie.',graphTitle:'Wissensgraph',searchTitle:'Intelligente Suche',searchBtn:'Suchen',publications:'Publikationen',results:'Ergebnisse',topics:'Themen',nodeBone:'Knochen',nodeRadiation:'Strahlung',nodePlant:'Pflanzen',nodeImmune:'Immun',nodeMuscle:'Muskeln',nodeCell:'Zellen',viewArticle:'Ansehen',whyRelevant:'Relevant:'},hi:{title:'अनुसंधान डैशबोर्ड',subtitle:'अंतरिक्ष जीव विज्ञान प्रयोग',aiSummary:'608 नासा प्रकाशनों का विश्लेषण। मुख्य क्षेत्र: हड्डी घनत्व, विकिरण, पौधे, प्रतिरक्षा, मांसपेशी शोष।',graphTitle:'ज्ञान ग्राफ',searchTitle:'बुद्धिमान खोज',searchBtn:'खोजें',publications:'प्रकाशन',results:'परिणाम',topics:'विषय',nodeBone:'हड्डी',nodeRadiation:'विकिरण',nodePlant:'पौधे',nodeImmune:'प्रतिरक्षा',nodeMuscle:'मांसपेशी',nodeCell:'कोशिका',viewArticle:'देखें',whyRelevant:'प्रासंगिक:'},ja:{title:'研究ダッシュボード',subtitle:'宇宙生物学実験',aiSummary:'608のNASA出版物を分析。主要領域：骨密度、放射線、植物、免疫、筋萎縮。',graphTitle:'知識グラフ',searchTitle:'検索',searchBtn:'検索',publications:'出版物',results:'結果',topics:'トピック',nodeBone:'骨',nodeRadiation:'放射線',nodePlant:'植物',nodeImmune:'免疫',nodeMuscle:'筋肉',nodeCell:'細胞',viewArticle:'見る',whyRelevant:'関連:'}};
-const T={'planta':'plant','pianta':'plant','pflanze':'plant','पौधा':'plant','植物':'plant','hueso':'bone','osso':'bone','knochen':'bone','हड्डी':'bone','骨':'bone','musculo':'muscle','muscolo':'muscle','muskel':'muscle','मांसपेशी':'muscle','筋肉':'muscle','radiacion':'radiation','radiazione':'radiation','strahlung':'radiation','विकिरण':'radiation','放射線':'radiation','microgravedad':'microgravity','microgravità':'microgravity','सूक्ष्म':'microgravity','微小重力':'microgravity','espacio':'space','spazio':'space','raum':'space','अंतरिक्ष':'space','宇宙':'space','celula':'cell','cellula':'cell','zelle':'cell','कोशिका':'cell','細胞':'cell','corazon':'heart','cuore':'heart','herz':'heart','हृदय':'heart','心臓':'heart','cardiovascular':'cardiovascular','sangre':'blood','sangue':'blood','blut':'blood','inmune':'immune','immunitario':'immune','immun':'immune','प्रतिरक्षा':'immune','免疫':'immune','gen':'gene','geni':'gene','जीन':'gene','遺伝子':'gene','proteina':'protein','proteine':'protein','astronauta':'astronaut','vuelo':'flight','volo':'flight','mision':'mission','missione':'mission','orbita':'orbit','gravedad':'gravity','gravità':'gravity','crecimiento':'growth','crescita':'growth','salud':'health','salute':'health','enfermedad':'disease','malattia':'disease','oxidativo':'oxidative','mitocondria':'mitochondria','arabidopsis':'arabidopsis','raiz':'root','hoja':'leaf','semilla':'seed','fotosintesis':'photosynthesis','luz':'light','agua':'water','oxigeno':'oxygen','nasa':'nasa','marte':'mars','luna':'moon','tierra':'earth','neuronal':'neural','molecular':'molecular','metabolismo':'metabolism','tissue':'tissue','cellular':'cell','skeletal':'bone','muscular':'muscle','experiment':'experiment','research':'research','adaptation':'adaptation','inflammation':'inflammation','regeneration':'regeneration'};
-let c='es';
-function toggleLanguageMenu(){document.getElementById('langMenu').classList.toggle('open')}
-function changeLanguage(l){c=l;document.getElementById('langMenu').classList.remove('open');document.querySelectorAll('.lang-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.lang===l)b.classList.add('active')});const t=L[l];document.getElementById('mainTitle').textContent=t.title;document.getElementById('mainSubtitle').textContent=t.subtitle;document.getElementById('aiSummaryText').textContent=t.aiSummary;document.getElementById('graphTitle').textContent=t.graphTitle;document.getElementById('searchTitle').textContent=t.searchTitle;document.getElementById('searchBtn').textContent=t.searchBtn;document.getElementById('labelPubs').textContent=t.publications;document.getElementById('labelResults').textContent=t.results;document.getElementById('labelTopics').textContent=t.topics;createKnowledgeGraph()}
-function translateQuery(q){const w=q.toLowerCase().split(/\s+/);return w.map(wd=>{if(T[wd])return T[wd];for(let k in T)if(wd.length>2&&(wd.includes(k)||k.includes(wd)))return T[k];return wd}).join(' ')}
-function createStars(){const s=document.getElementById('stars');for(let i=0;i<100;i++){const st=document.createElement('div');st.className='star';st.style.left=Math.random()*100+'%';st.style.top=Math.random()*100+'%';st.style.animationDelay=Math.random()*3+'s';s.appendChild(st)}}
-function quickSearch(q){document.getElementById('searchInput').value=q;searchArticles()}
-function searchArticles(){const t=L[c];const q=document.getElementById('searchInput').value.toLowerCase().trim();if(!q){displayResults(ARTICLES.slice(0,20),'All Publications (608)');return}const tq=translateQuery(q);const st=[q,tq].join(' ').toLowerCase();const qw=st.split(/\s+/).filter(w=>w.length>1);const r=ARTICLES.map(a=>{let sc=0;let mr=[];const tl=a.Title.toLowerCase();qw.forEach(w=>{if(tl.includes(w)){sc+=20*(tl.match(new RegExp(w,'gi'))||[]).length;mr.push(w)}});if(tl.includes(q)||tl.includes(tq)){sc+=40}if(mr.length>1)sc+=15;return{...a,score:sc,matchReasons:[...new Set(mr)]}});const flt=r.filter(x=>x.score>0).sort((a,b)=>b.score-a.score);if(flt.length===0){displayResults(ARTICLES.sort(()=>Math.random()-0.5).slice(0,10),`No results for "${q}"`);document.getElementById('resultsCount').textContent='10'}else{displayResults(flt,`${flt.length} results for "${q}"`);document.getElementById('resultsCount').textContent=flt.length}}
-function displayResults(arts,hdr){const t=L[c];document.getElementById('resultsHeader').textContent=hdr;const html=arts.map(a=>{const why=a.matchReasons&&a.matchReasons.length>0?`<div class="why-relevant"><strong>${t.whyRelevant}</strong> ${a.matchReasons.join(', ')}</div>`:'';return`<div class="article-card"><h3 class="article-title">${a.Title}</h3>${why}<a href="${a.Link}" target="_blank" class="article-link">${t.viewArticle}</a></div>`}).join('');document.getElementById('resultsContainer').innerHTML=html}
-function createKnowledgeGraph(){const t=L[c];const nodes=[{id:'bone',icon:'🦴',label:t.nodeBone,color:'#ff6b9d',x:20,y:20,kw:['bone','skeletal','hueso','osso','knochen','हड्डी','骨']},{id:'radiation',icon:'☢️',label:t.nodeRadiation,color:'#ffd700',x:80,y:15,kw:['radiation','cosmic','radiación','radiazione','strahlung','विकिरण','放射線']},{id:'plant',icon:'🌱',label:t.nodePlant,color:'#4ade80',x:70,y:70,kw:['plant','arabidopsis','planta','pianta','pflanze','पौधा','植物']},{id:'immune',icon:'🛡️',label:t.nodeImmune,color:'#60a5fa',x:15,y:75,kw:['immune','immunity','inmune','immunitario','immun','प्रतिरक्षा','免疫']},{id:'muscle',icon:'💪',label:t.nodeMuscle,color:'#f97316',x:50,y:45,kw:['muscle','muscular','musculo','muscolo','muskel','मांसपेशी','筋肉']},{id:'cell',icon:'🔬',label:t.nodeCell,color:'#a78bfa',x:85,y:50,kw:['cell','cellular','celula','cellula','zelle','कोशिका','細胞']}];const canvas=document.getElementById('graphCanvas');const w=canvas.offsetWidth;const h=canvas.offsetHeight;canvas.innerHTML='';const conn=[[0,1],[0,4],[1,2],[1,5],[2,3],[2,4],[3,4],[4,5],[0,3],[1,4]];conn.forEach(([i,j])=>{const n1=nodes[i];const n2=nodes[j];const x1=n1.x*w/100+50;const y1=n1.y*h/100+50;const x2=n2.x*w/100+50;const y2=n2.y*h/100+50;const line=document.createElement('div');line.className='graph-line';const len=Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));const angle=Math.atan2(y2-y1,x2-x1)*180/Math.PI;line.style.width=len+'px';line.style.left=x1+'px';line.style.top=y1+'px';line.style.transform=`rotate(${angle}deg)`;canvas.appendChild(line)});nodes.forEach(n=>{let cnt=0;ARTICLES.forEach(a=>{const tl=a.Title.toLowerCase();if(n.kw.some(k=>tl.includes(k)))cnt++});const node=document.createElement('div');node.className='graph-node-visual';node.style.background=n.color;node.style.left=(n.x*w/100)+'px';node.style.top=(n.y*h/100)+'px';node.innerHTML=`<div class="node-icon">${n.icon}</div><div class="node-text">${n.label}</div><div class="node-count-badge">${cnt}</div>`;node.onclick=()=>{document.getElementById('searchInput').value=n.kw[0];searchArticles()};canvas.appendChild(node)})}
-document.getElementById('searchInput').addEventListener('keypress',e=>{if(e.key==='Enter')searchArticles()});
-createStars();
-createKnowledgeGraph();
-displayResults(ARTICLES.slice(0,20),'All Publications (608)');
+        // Diccionario español-inglés para búsquedas
+        const TRANSLATIONS = {
+            'planta': 'plant', 'plantas': 'plant',
+            'hueso': 'bone', 'huesos': 'bone',
+            'musculo': 'muscle', 'musculos': 'muscle', 'músculo': 'muscle', 'músculos': 'muscle',
+            'radiacion': 'radiation', 'radiación': 'radiation',
+            'microgravedad': 'microgravity',
+            'espacio': 'space', 'espacial': 'space',
+            'estacion': 'station', 'estación': 'station',
+            'internacional': 'international',
+            'raton': 'mouse', 'ratones': 'mice', 'ratón': 'mouse',
+            'celula': 'cell', 'celulas': 'cell', 'célula': 'cell', 'células': 'cell',
+            'cerebro': 'brain',
+            'corazon': 'heart', 'corazón': 'heart',
+            'higado': 'liver', 'hígado': 'liver',
+            'riñon': 'kidney', 'riñones': 'kidney',
+            'sangre': 'blood',
+            'inmune': 'immune', 'inmunidad': 'immune',
+            'bacteria': 'bacteria', 'bacterias': 'bacteria',
+            'hongo': 'fungi', 'hongos': 'fungi',
+            'virus': 'virus',
+            'gen': 'gene', 'genes': 'gene',
+            'adn': 'dna', 'ADN': 'DNA',
+            'proteina': 'protein', 'proteínas': 'protein',
+            'astronauta': 'astronaut', 'astronautas': 'astronaut',
+            'vuelo': 'flight', 'vuelos': 'flight',
+            'mision': 'mission', 'misión': 'mission',
+            'orbita': 'orbit', 'órbita': 'orbit',
+            'gravedad': 'gravity',
+            'peso': 'weight',
+            'atrofia': 'atrophy',
+            'crecimiento': 'growth',
+            'desarrollo': 'development',
+            'salud': 'health',
+            'enfermedad': 'disease',
+            'estres': 'stress', 'estrés': 'stress',
+            'oxidativo': 'oxidative',
+            'mitocondria': 'mitochondria', 'mitocondrias': 'mitochondria',
+            'drosophila': 'drosophila', 'mosca': 'drosophila',
+            'arabidopsis': 'arabidopsis',
+            'raiz': 'root', 'raíz': 'root', 'raices': 'root', 'raíces': 'root',
+            'hoja': 'leaf', 'hojas': 'leaf',
+            'tallo': 'stem',
+            'semilla': 'seed', 'semillas': 'seed',
+            'germinacion': 'germination', 'germinación': 'germination',
+            'fotosintesis': 'photosynthesis', 'fotosíntesis': 'photosynthesis',
+            'luz': 'light',
+            'oscuridad': 'dark',
+            'agua': 'water',
+            'oxigeno': 'oxygen', 'oxígeno': 'oxygen',
+            'nitrogeno': 'nitrogen', 'nitrógeno': 'nitrogen',
+            'carbono': 'carbon',
+            'calcio': 'calcium',
+            'hierro': 'iron',
+            'iss': 'space station',
+            'nasa': 'nasa',
+            'marte': 'mars',
+            'luna': 'lunar moon',
+            'tierra': 'earth'
+        };
+
+        // Variables globales para el Knowledge Graph
+        let network;
+        let physicsEnabled = true;
+
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        function initKnowledgeGraph() {
+            const nodes = new vis.DataSet([
+                { id: 'microgravity', label: 'Microgravedad', group: 'physics', size: 40, title: 'Efectos de la microgravedad en organismos' },
+                { id: 'radiation', label: 'Radiación', group: 'physics', size: 38, title: 'Radiación cósmica y espacial' },
+                { id: 'bone', label: 'Huesos', group: 'biology', size: 35, title: 'Pérdida ósea en el espacio' },
+                { id: 'muscle', label: 'Músculos', group: 'biology', size: 35, title: 'Atrofia muscular' },
+                { id: 'immune', label: 'Sistema Inmune', group: 'biology', size: 32, title: 'Respuesta inmunológica en el espacio' },
+                { id: 'plant', label: 'Plantas', group: 'biology', size: 33, title: 'Crecimiento de plantas en microgravedad' },
+                { id: 'cell', label: 'Células', group: 'biology', size: 30, title: 'Biología celular espacial' },
+                { id: 'gene', label: 'Genes', group: 'molecular', size: 30, title: 'Expresión génica' },
+                { id: 'protein', label: 'Proteínas', group: 'molecular', size: 28, title: 'Síntesis de proteínas' },
+                { id: 'mitochondria', label: 'Mitocondrias', group: 'molecular', size: 26, title: 'Función mitocondrial' },
+                { id: 'oxidative', label: 'Estrés Oxidativo', group: 'molecular', size: 25, title: 'Daño oxidativo celular' },
+                { id: 'iss', label: 'ISS', group: 'space', size: 42, title: 'Estación Espacial Internacional' },
+                { id: 'mice', label: 'Ratones', group: 'model', size: 30, title: 'Modelo animal principal' },
+                { id: 'arabidopsis', label: 'Arabidopsis', group: 'model', size: 28, title: 'Planta modelo para estudios' },
+                { id: 'bacteria', label: 'Bacterias', group: 'micro', size: 28, title: 'Microbiología espacial' },
+                { id: 'cardiovascular', label: 'Cardiovascular', group: 'biology', size: 30, title: 'Sistema cardiovascular' },
+                { id: 'nervous', label: 'Sistema Nervioso', group: 'biology', size: 28, title: 'Cerebro y nervios' },
+                { id: 'countermeasures', label: 'Contramedidas', group: 'solution', size: 32, title: 'Soluciones para astronautas' }
+            ]);
+
+            const edges = new vis.DataSet([
+                { from: 'microgravity', to: 'bone', value: 5, title: 'La microgravedad causa pérdida ósea' },
+                { from: 'microgravity', to: 'muscle', value: 5, title: 'Causa atrofia muscular' },
+                { from: 'microgravity', to: 'cardiovascular', value: 4, title: 'Afecta al sistema cardiovascular' },
+                { from: 'microgravity', to: 'plant', value: 4, title: 'Modifica el crecimiento de plantas' },
+                { from: 'radiation', to: 'cell', value: 5, title: 'Daña las células' },
+                { from: 'radiation', to: 'gene', value: 4, title: 'Altera la expresión génica' },
+                { from: 'radiation', to: 'immune', value: 4, title: 'Afecta la inmunidad' },
+                { from: 'radiation', to: 'oxidative', value: 5, title: 'Genera estrés oxidativo' },
+                { from: 'bone', to: 'cell', value: 3, title: 'Osteocitos afectados' },
+                { from: 'muscle', to: 'protein', value: 4, title: 'Pérdida de proteínas musculares' },
+                { from: 'muscle', to: 'mitochondria', value: 3, title: 'Disfunción mitocondrial' },
+                { from: 'immune', to: 'cell', value: 4, title: 'Células inmunes afectadas' },
+                { from: 'immune', to: 'gene', value: 3, title: 'Regulación génica inmune' },
+                { from: 'gene', to: 'protein', value: 5, title: 'Los genes codifican proteínas' },
+                { from: 'oxidative', to: 'mitochondria', value: 4, title: 'Causa daño mitocondrial' },
+                { from: 'mitochondria', to: 'cell', value: 4, title: 'Energía celular' },
+                { from: 'iss', to: 'plant', value: 3, title: 'Experimentos de plantas en ISS' },
+                { from: 'iss', to: 'mice', value: 4, title: 'Estudios con ratones' },
+                { from: 'iss', to: 'bacteria', value: 3, title: 'Microbioma de la ISS' },
+                { from: 'mice', to: 'bone', value: 4, title: 'Modelo para estudios óseos' },
+                { from: 'mice', to: 'muscle', value: 4, title: 'Modelo para estudios musculares' },
+                { from: 'mice', to: 'cardiovascular', value: 3, title: 'Modelo cardiovascular' },
+                { from: 'mice', to: 'nervous', value: 3, title: 'Modelo neurológico' },
+                { from: 'arabidopsis', to: 'plant', value: 5, title: 'Planta modelo principal' },
+                { from: 'arabidopsis', to: 'gene', value: 3, title: 'Estudios genéticos en plantas' },
+                { from: 'cardiovascular', to: 'cell', value: 3, title: 'Células cardíacas' },
+                { from: 'nervous', to: 'cell', value: 3, title: 'Neuronas afectadas' },
+                { from: 'nervous', to: 'oxidative', value: 3, title: 'Daño neuronal oxidativo' },
+                { from: 'countermeasures', to: 'bone', value: 3, title: 'Protección ósea' },
+                { from: 'countermeasures', to: 'muscle', value: 3, title: 'Mantenimiento muscular' },
+                { from: 'countermeasures', to: 'cardiovascular', value: 2, title: 'Salud cardiovascular' }
+            ]);
+
+            const container = document.getElementById('knowledgeGraph');
+            const data = { nodes, edges };
+            
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    font: {
+                        size: 16,
+                        color: '#ffffff',
+                        face: 'Rubik',
+                        bold: { size: 18 }
+                    },
+                    borderWidth: 3,
+                    shadow: {
+                        enabled: true,
+                        color: 'rgba(0,0,0,0.5)',
+                        size: 10,
+                        x: 3,
+                        y: 3
+                    }
+                },
+                edges: {
+                    width: 2,
+                    color: { 
+                        color: 'rgba(255, 215, 0, 0.4)',
+                        highlight: 'rgba(255, 215, 0, 0.8)',
+                        hover: 'rgba(255, 215, 0, 0.6)'
+                    },
+                    smooth: {
+                        type: 'continuous',
+                        roundness: 0.5
+                    },
+                    arrows: {
+                        to: { enabled: true, scaleFactor: 0.5 }
+                    }
+                },
+                groups: {
+                    physics: {
+                        color: { 
+                            background: '#ff6b9d',
+                            border: '#c06c84',
+                            highlight: { background: '#ff8db3', border: '#d07c94' }
+                        }
+                    },
+                    biology: {
+                        color: { 
+                            background: '#4ecdc4',
+                            border: '#3aa89f',
+                            highlight: { background: '#6eddd4', border: '#4ab8af' }
+                        }
+                    },
+                    molecular: {
+                        color: { 
+                            background: '#95e1d3',
+                            border: '#7bc7b8',
+                            highlight: { background: '#a5f1e3', border: '#8bd7c8' }
+                        }
+                    },
+                    space: {
+                        color: { 
+                            background: '#ffd700',
+                            border: '#ffaa00',
+                            highlight: { background: '#ffe740', border: '#ffba20' }
+                        }
+                    },
+                    model: {
+                        color: { 
+                            background: '#a8dadc',
+                            border: '#8bb5b7',
+                            highlight: { background: '#b8eaec', border: '#9bc5c7' }
+                        }
+                    },
+                    micro: {
+                        color: { 
+                            background: '#f38181',
+                            border: '#d46565',
+                            highlight: { background: '#ff9191', border: '#e47575' }
+                        }
+                    },
+                    solution: {
+                        color: { 
+                            background: '#aa96da',
+                            border: '#8b77bb',
+                            highlight: { background: '#baa6ea', border: '#9b87cb' }
+                        }
+                    }
+                },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -8000,
+                        centralGravity: 0.3,
+                        springLength: 200,
+                        springConstant: 0.04,
+                        damping: 0.09,
+                        avoidOverlap: 0.5
+                    },
+                    stabilization: { iterations: 200 }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 100,
+                    zoomView: true,
+                    dragView: true
+                }
+            };
+
+            network = new vis.Network(container, data, options);
+
+            network.on('click', function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const nodeTopic = nodes.get(nodeId).label;
+                    
+                    document.getElementById('searchInput').value = nodeTopic;
+                    searchArticles();
+                    
+                    document.getElementById('resultsHeader').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            network.once('stabilizationIterationsDone', function() {
+                network.setOptions({ physics: { enabled: false } });
+                physicsEnabled = false;
+            });
+        }
+
+        function resetGraph() {
+            if (network) {
+                network.fit({
+                    animation: {
+                        duration: 1000,
+                        easingFunction: 'easeInOutQuad'
+                    }
+                });
+            }
+        }
+
+        function togglePhysics() {
+            if (network) {
+                physicsEnabled = !physicsEnabled;
+                network.setOptions({ physics: { enabled: physicsEnabled } });
+                
+                if (!physicsEnabled) {
+                    setTimeout(() => {
+                        network.stopSimulation();
+                    }, 3000);
+                }
+            }
+        }
+
+        function fitGraph() {
+            if (network) {
+                network.fit();
+            }
+        }
+
+        function translateQuery(query) {
+            const words = query.toLowerCase().split(/\s+/);
+            const translated = words.map(word => {
+                if (TRANSLATIONS[word]) {
+                    return TRANSLATIONS[word];
+                }
+                for (let key in TRANSLATIONS) {
+                    if (word.includes(key) || key.includes(word)) {
+                        return TRANSLATIONS[key];
+                    }
+                }
+                return word;
+            });
+            return translated.join(' ');
+        }
+
+        function quickSearch(query) {
+            document.getElementById('searchInput').value = query;
+            searchArticles();
+        }
+
+        function searchArticles() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!query) {
+                displayResults(ARTICLES.slice(0, 20), 'Primeros 20 Artículos');
+                return;
+            }
+
+            const translatedQuery = translateQuery(query);
+            const searchTerms = [query, translatedQuery].join(' ').toLowerCase();
+            const queryWords = searchTerms.split(/\s+/).filter(w => w.length > 1);
+            
+            const results = ARTICLES.map(article => {
+                let score = 0;
+                let matchReasons = [];
+                const titleLower = article.Title.toLowerCase();
+
+                queryWords.forEach(word => {
+                    if (titleLower.includes(word)) {
+                        const matches = (titleLower.match(new RegExp(word, 'gi')) || []).length;
+                        score += 15 * matches;
+                        matchReasons.push(`"${word}" encontrado`);
+                    } else {
+                        const words = titleLower.split(/\s+/);
+                        words.forEach(titleWord => {
+                            if (titleWord.includes(word) && word.length > 2) {
+                                score += 5;
+                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                            }
+                            if (word.includes(titleWord) && titleWord.length > 2) {
+                                score += 5;
+                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                            }
+                        });
+                    }
+                });
+
+                if (titleLower.includes(query) || titleLower.includes(translatedQuery)) {
+                    score += 30;
+                    matchReasons.push('coincidencia exacta');
+                }
+
+                if (matchReasons.length > 1) {
+                    score += 10;
+                }
+
+                const relevance = score > 0 ? Math.min(100, Math.round((score / 20) * 10)) : 0;
+
+                return { ...article, score, relevance, matchReasons: [...new Set(matchReasons)] };
+            });
+
+            const filtered = results.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 30);
+
+            if (filtered.length === 0) {
+                const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10);
+                displayResults(randomArticles, `No se encontraron resultados exactos para "${query}". Aquí hay artículos que podrían interesarte:`);
+                document.getElementById('resultsCount').textContent = '10';
+            } else {
+                displayResults(filtered, `${filtered.length} Resultados para "${query}"`);
+                document.getElementById('resultsCount').textContent = filtered.length;
+            }
+        }
+
+        function displayResults(articles, headerText) {
+            document.getElementById('resultsHeader').textContent = headerText;
+            
+            const html = articles.map(article => {
+                const badge = article.relevance ? `<div class="relevance-badge">${article.relevance}% Relevante</div>` : '';
+                const why = article.matchReasons && article.matchReasons.length > 0 
+                    ? `<div class="why-relevant"><strong>Por qué es relevante:</strong> ${article.matchReasons.join(', ')}</div>` 
+                    : '';
+
+                return `
+                    <div class="article-card">
+                        ${badge}
+                        <h3 class="article-title">${article.Title}</h3>
+                        ${why}
+                        <a href="${article.Link}" target="_blank" class="article-link">Ver Artículo Completo</a>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('resultsContainer').innerHTML = html;
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchArticles();
+        });
+
+        createStars();
+        initKnowledgeGraph();
+        displayResults(ARTICLES.slice(0, 20), 'Primeros 20 Artículos');
     </script>
 </body>
 </html>
