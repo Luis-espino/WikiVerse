@@ -126,49 +126,6 @@
             font-weight: 500;
         }
 
-        .knowledge-graph-section {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border: 3px solid rgba(255, 215, 0, 0.3);
-            border-radius: 30px;
-            padding: 40px;
-            margin-bottom: 50px;
-            animation: fadeIn 1s ease 0.4s both;
-        }
-
-        .graph-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #ffd700;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .graph-subtitle {
-            text-align: center;
-            color: #a8dadc;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
-        }
-
-        #knowledgeGraph {
-            width: 100%;
-            height: 600px;
-            background: rgba(10, 22, 40, 0.5);
-            border-radius: 20px;
-            position: relative;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .graph-controls {
-            margin-top: 20px;
-            text-align: center;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
         .search-section {
             background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(192, 108, 132, 0.15));
             border: 3px solid rgba(255, 215, 0, 0.3);
@@ -358,7 +315,6 @@
             header h1 { font-size: 2.5rem; }
             .article-grid { grid-template-columns: 1fr; }
             .search-box { flex-direction: column; }
-            #knowledgeGraph { height: 400px; }
         }
     </style>
 </head>
@@ -380,17 +336,6 @@
             <div class="stat-card">
                 <span class="stat-number" id="resultsCount">608</span>
                 <span class="stat-label">Resultados</span>
-            </div>
-        </div>
-
-        <div class="knowledge-graph-section">
-            <h2 class="graph-title">🧠 Gráfico de Conocimiento Interactivo</h2>
-            <p class="graph-subtitle">Explora las conexiones entre temas de investigación espacial. Haz clic en cualquier nodo para buscar artículos relacionados.</p>
-            <div id="knowledgeGraph"></div>
-            <div class="graph-controls">
-                <button class="filter-btn" onclick="resetGraph()">🔄 Reiniciar Vista</button>
-                <button class="filter-btn" onclick="togglePhysics()">⚡ Física On/Off</button>
-                <button class="filter-btn" onclick="fitGraph()">🎯 Centrar</button>
             </div>
         </div>
 
@@ -416,11 +361,11 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
     <script src="articles-data.js"></script>
     <script>
         // Diccionario español-inglés para búsquedas
         const TRANSLATIONS = {
+            // Términos generales
             'planta': 'plant', 'plantas': 'plant',
             'hueso': 'bone', 'huesos': 'bone',
             'musculo': 'muscle', 'musculos': 'muscle', 'músculo': 'muscle', 'músculos': 'muscle',
@@ -477,12 +422,33 @@
             'nasa': 'nasa',
             'marte': 'mars',
             'luna': 'lunar moon',
-            'tierra': 'earth'
+            'tierra': 'earth',
+            'vacio': 'vacuum space void',
+            'vacío': 'vacuum space void',
+            'constelacion': 'constellation stellar star',
+            'constelación': 'constellation stellar star',
+            'presion': 'pressure atmospheric',
+            'presión': 'pressure atmospheric',
+            'carta': 'chart map cartography paper letter'
         };
 
-        // Variables globales para el Knowledge Graph
-        let network;
-        let physicsEnabled = true;
+        function translateQuery(query) {
+            const words = query.toLowerCase().split(/\s+/);
+            const translated = words.map(word => {
+                // Buscar traducción exacta
+                if (TRANSLATIONS[word]) {
+                    return TRANSLATIONS[word];
+                }
+                // Buscar traducción parcial (palabras que contienen el término)
+                for (let key in TRANSLATIONS) {
+                    if (word.includes(key) || key.includes(word)) {
+                        return TRANSLATIONS[key];
+                    }
+                }
+                return word;
+            });
+            return translated.join(' ');
+        }
 
         function createStars() {
             const starsContainer = document.getElementById('stars');
@@ -494,235 +460,6 @@
                 star.style.animationDelay = Math.random() * 3 + 's';
                 starsContainer.appendChild(star);
             }
-        }
-
-        function initKnowledgeGraph() {
-            const nodes = new vis.DataSet([
-                { id: 'microgravity', label: 'Microgravedad', group: 'physics', size: 40, title: 'Efectos de la microgravedad en organismos' },
-                { id: 'radiation', label: 'Radiación', group: 'physics', size: 38, title: 'Radiación cósmica y espacial' },
-                { id: 'bone', label: 'Huesos', group: 'biology', size: 35, title: 'Pérdida ósea en el espacio' },
-                { id: 'muscle', label: 'Músculos', group: 'biology', size: 35, title: 'Atrofia muscular' },
-                { id: 'immune', label: 'Sistema Inmune', group: 'biology', size: 32, title: 'Respuesta inmunológica en el espacio' },
-                { id: 'plant', label: 'Plantas', group: 'biology', size: 33, title: 'Crecimiento de plantas en microgravedad' },
-                { id: 'cell', label: 'Células', group: 'biology', size: 30, title: 'Biología celular espacial' },
-                { id: 'gene', label: 'Genes', group: 'molecular', size: 30, title: 'Expresión génica' },
-                { id: 'protein', label: 'Proteínas', group: 'molecular', size: 28, title: 'Síntesis de proteínas' },
-                { id: 'mitochondria', label: 'Mitocondrias', group: 'molecular', size: 26, title: 'Función mitocondrial' },
-                { id: 'oxidative', label: 'Estrés Oxidativo', group: 'molecular', size: 25, title: 'Daño oxidativo celular' },
-                { id: 'iss', label: 'ISS', group: 'space', size: 42, title: 'Estación Espacial Internacional' },
-                { id: 'mice', label: 'Ratones', group: 'model', size: 30, title: 'Modelo animal principal' },
-                { id: 'arabidopsis', label: 'Arabidopsis', group: 'model', size: 28, title: 'Planta modelo para estudios' },
-                { id: 'bacteria', label: 'Bacterias', group: 'micro', size: 28, title: 'Microbiología espacial' },
-                { id: 'cardiovascular', label: 'Cardiovascular', group: 'biology', size: 30, title: 'Sistema cardiovascular' },
-                { id: 'nervous', label: 'Sistema Nervioso', group: 'biology', size: 28, title: 'Cerebro y nervios' },
-                { id: 'countermeasures', label: 'Contramedidas', group: 'solution', size: 32, title: 'Soluciones para astronautas' }
-            ]);
-
-            const edges = new vis.DataSet([
-                { from: 'microgravity', to: 'bone', value: 5, title: 'La microgravedad causa pérdida ósea' },
-                { from: 'microgravity', to: 'muscle', value: 5, title: 'Causa atrofia muscular' },
-                { from: 'microgravity', to: 'cardiovascular', value: 4, title: 'Afecta al sistema cardiovascular' },
-                { from: 'microgravity', to: 'plant', value: 4, title: 'Modifica el crecimiento de plantas' },
-                { from: 'radiation', to: 'cell', value: 5, title: 'Daña las células' },
-                { from: 'radiation', to: 'gene', value: 4, title: 'Altera la expresión génica' },
-                { from: 'radiation', to: 'immune', value: 4, title: 'Afecta la inmunidad' },
-                { from: 'radiation', to: 'oxidative', value: 5, title: 'Genera estrés oxidativo' },
-                { from: 'bone', to: 'cell', value: 3, title: 'Osteocitos afectados' },
-                { from: 'muscle', to: 'protein', value: 4, title: 'Pérdida de proteínas musculares' },
-                { from: 'muscle', to: 'mitochondria', value: 3, title: 'Disfunción mitocondrial' },
-                { from: 'immune', to: 'cell', value: 4, title: 'Células inmunes afectadas' },
-                { from: 'immune', to: 'gene', value: 3, title: 'Regulación génica inmune' },
-                { from: 'gene', to: 'protein', value: 5, title: 'Los genes codifican proteínas' },
-                { from: 'oxidative', to: 'mitochondria', value: 4, title: 'Causa daño mitocondrial' },
-                { from: 'mitochondria', to: 'cell', value: 4, title: 'Energía celular' },
-                { from: 'iss', to: 'plant', value: 3, title: 'Experimentos de plantas en ISS' },
-                { from: 'iss', to: 'mice', value: 4, title: 'Estudios con ratones' },
-                { from: 'iss', to: 'bacteria', value: 3, title: 'Microbioma de la ISS' },
-                { from: 'mice', to: 'bone', value: 4, title: 'Modelo para estudios óseos' },
-                { from: 'mice', to: 'muscle', value: 4, title: 'Modelo para estudios musculares' },
-                { from: 'mice', to: 'cardiovascular', value: 3, title: 'Modelo cardiovascular' },
-                { from: 'mice', to: 'nervous', value: 3, title: 'Modelo neurológico' },
-                { from: 'arabidopsis', to: 'plant', value: 5, title: 'Planta modelo principal' },
-                { from: 'arabidopsis', to: 'gene', value: 3, title: 'Estudios genéticos en plantas' },
-                { from: 'cardiovascular', to: 'cell', value: 3, title: 'Células cardíacas' },
-                { from: 'nervous', to: 'cell', value: 3, title: 'Neuronas afectadas' },
-                { from: 'nervous', to: 'oxidative', value: 3, title: 'Daño neuronal oxidativo' },
-                { from: 'countermeasures', to: 'bone', value: 3, title: 'Protección ósea' },
-                { from: 'countermeasures', to: 'muscle', value: 3, title: 'Mantenimiento muscular' },
-                { from: 'countermeasures', to: 'cardiovascular', value: 2, title: 'Salud cardiovascular' }
-            ]);
-
-            const container = document.getElementById('knowledgeGraph');
-            const data = { nodes, edges };
-            
-            const options = {
-                nodes: {
-                    shape: 'dot',
-                    font: {
-                        size: 16,
-                        color: '#ffffff',
-                        face: 'Rubik',
-                        bold: { size: 18 }
-                    },
-                    borderWidth: 3,
-                    shadow: {
-                        enabled: true,
-                        color: 'rgba(0,0,0,0.5)',
-                        size: 10,
-                        x: 3,
-                        y: 3
-                    }
-                },
-                edges: {
-                    width: 2,
-                    color: { 
-                        color: 'rgba(255, 215, 0, 0.4)',
-                        highlight: 'rgba(255, 215, 0, 0.8)',
-                        hover: 'rgba(255, 215, 0, 0.6)'
-                    },
-                    smooth: {
-                        type: 'continuous',
-                        roundness: 0.5
-                    },
-                    arrows: {
-                        to: { enabled: true, scaleFactor: 0.5 }
-                    }
-                },
-                groups: {
-                    physics: {
-                        color: { 
-                            background: '#ff6b9d',
-                            border: '#c06c84',
-                            highlight: { background: '#ff8db3', border: '#d07c94' }
-                        }
-                    },
-                    biology: {
-                        color: { 
-                            background: '#4ecdc4',
-                            border: '#3aa89f',
-                            highlight: { background: '#6eddd4', border: '#4ab8af' }
-                        }
-                    },
-                    molecular: {
-                        color: { 
-                            background: '#95e1d3',
-                            border: '#7bc7b8',
-                            highlight: { background: '#a5f1e3', border: '#8bd7c8' }
-                        }
-                    },
-                    space: {
-                        color: { 
-                            background: '#ffd700',
-                            border: '#ffaa00',
-                            highlight: { background: '#ffe740', border: '#ffba20' }
-                        }
-                    },
-                    model: {
-                        color: { 
-                            background: '#a8dadc',
-                            border: '#8bb5b7',
-                            highlight: { background: '#b8eaec', border: '#9bc5c7' }
-                        }
-                    },
-                    micro: {
-                        color: { 
-                            background: '#f38181',
-                            border: '#d46565',
-                            highlight: { background: '#ff9191', border: '#e47575' }
-                        }
-                    },
-                    solution: {
-                        color: { 
-                            background: '#aa96da',
-                            border: '#8b77bb',
-                            highlight: { background: '#baa6ea', border: '#9b87cb' }
-                        }
-                    }
-                },
-                physics: {
-                    enabled: true,
-                    barnesHut: {
-                        gravitationalConstant: -8000,
-                        centralGravity: 0.3,
-                        springLength: 200,
-                        springConstant: 0.04,
-                        damping: 0.09,
-                        avoidOverlap: 0.5
-                    },
-                    stabilization: { iterations: 200 }
-                },
-                interaction: {
-                    hover: true,
-                    tooltipDelay: 100,
-                    zoomView: true,
-                    dragView: true
-                }
-            };
-
-            network = new vis.Network(container, data, options);
-
-            network.on('click', function(params) {
-                if (params.nodes.length > 0) {
-                    const nodeId = params.nodes[0];
-                    const nodeTopic = nodes.get(nodeId).label;
-                    
-                    document.getElementById('searchInput').value = nodeTopic;
-                    searchArticles();
-                    
-                    document.getElementById('resultsHeader').scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-
-            network.once('stabilizationIterationsDone', function() {
-                network.setOptions({ physics: { enabled: false } });
-                physicsEnabled = false;
-            });
-        }
-
-        function resetGraph() {
-            if (network) {
-                network.fit({
-                    animation: {
-                        duration: 1000,
-                        easingFunction: 'easeInOutQuad'
-                    }
-                });
-            }
-        }
-
-        function togglePhysics() {
-            if (network) {
-                physicsEnabled = !physicsEnabled;
-                network.setOptions({ physics: { enabled: physicsEnabled } });
-                
-                if (!physicsEnabled) {
-                    setTimeout(() => {
-                        network.stopSimulation();
-                    }, 3000);
-                }
-            }
-        }
-
-        function fitGraph() {
-            if (network) {
-                network.fit();
-            }
-        }
-
-        function translateQuery(query) {
-            const words = query.toLowerCase().split(/\s+/);
-            const translated = words.map(word => {
-                if (TRANSLATIONS[word]) {
-                    return TRANSLATIONS[word];
-                }
-                for (let key in TRANSLATIONS) {
-                    if (word.includes(key) || key.includes(word)) {
-                        return TRANSLATIONS[key];
-                    }
-                }
-                return word;
-            });
-            return translated.join(' ');
         }
 
         function quickSearch(query) {
@@ -738,70 +475,73 @@
                 return;
             }
 
+            // Traducir query de español a inglés
             const translatedQuery = translateQuery(query);
+            
+            // Agregar más traducciones dinámicas
+            'vacio'; 'vacuum space void empty',
+            'constelacion'; 'constellation stellar star',
+            'presion'; 'pressure atmospheric',
+            'carta'; 'chart map cartography paper letter'
+            
+            // Buscar con ambas versiones (original + traducida)
             const searchTerms = [query, translatedQuery].join(' ').toLowerCase();
             const queryWords = searchTerms.split(/\s+/).filter(w => w.length > 1);
             
             const results = ARTICLES.map(article => {
                 let score = 0;
                 let matchReasons = [];
-                
-                // Manejar ambos formatos: Title y "Title"
-                const title = article.Title || article["Title"] || "";
-                const link = article.Link || article["Link"] || "";
-                const titleLower = title.toLowerCase();
+                const titleLower = article.Title.toLowerCase();
 
                 queryWords.forEach(word => {
+                    // Buscar coincidencias exactas Y parciales
                     if (titleLower.includes(word)) {
                         const matches = (titleLower.match(new RegExp(word, 'gi')) || []).length;
                         score += 15 * matches;
-                        matchReasons.push(`"${word}" encontrado`);
+                        matchReasons.push("${word}" encontrado);
                     } else {
+                        // Buscar coincidencias parciales (palabras similares)
                         const words = titleLower.split(/\s+/);
                         words.forEach(titleWord => {
+                            // Si la palabra del título contiene parte de la búsqueda
                             if (titleWord.includes(word) && word.length > 2) {
                                 score += 5;
-                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                                matchReasons.push(coincidencia parcial con "${word}");
                             }
+                            // Si la búsqueda contiene parte de la palabra del título
                             if (word.includes(titleWord) && titleWord.length > 2) {
                                 score += 5;
-                                matchReasons.push(`coincidencia parcial con "${word}"`);
+                                matchReasons.push(coincidencia parcial con "${word}");
                             }
                         });
                     }
                 });
 
+                // Bonus por frase exacta
                 if (titleLower.includes(query) || titleLower.includes(translatedQuery)) {
                     score += 30;
                     matchReasons.push('coincidencia exacta');
                 }
 
+                // Bonus por múltiples palabras
                 if (matchReasons.length > 1) {
                     score += 10;
                 }
 
                 const relevance = score > 0 ? Math.min(100, Math.round((score / 20) * 10)) : 0;
 
-                return { 
-                    Title: title,
-                    Link: link,
-                    score, 
-                    relevance, 
-                    matchReasons: [...new Set(matchReasons)] 
-                };
+                return { ...article, score, relevance, matchReasons: [...new Set(matchReasons)] };
             });
 
             const filtered = results.filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 30);
 
             if (filtered.length === 0) {
-                const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10).map(article => ({
-                    Title: article.Title || article["Title"] || "",
-                    Link: article.Link || article["Link"] || ""
-                }));
-                displayResults(randomArticles, `No se encontraron resultados exactos para "${query}". Aquí hay artículos que podrían interesarte:`);
+                // Mostrar artículos aleatorios cuando no hay resultados
+                const randomArticles = ARTICLES.sort(() => Math.random() - 0.5).slice(0, 10);
+                displayResults(randomArticles, No se encontraron resultados exactos para "${query}". Aquí hay artículos que podrían interesarte:);
                 document.getElementById('resultsCount').textContent = '10';
             } else {
-                displayResults(filtered, `${filtered.length} Resultados para "${query}"`);
+                displayResults(filtered, ${filtered.length} Resultados para "${query}");
                 document.getElementById('resultsCount').textContent = filtered.length;
             }
         }
@@ -810,21 +550,17 @@
             document.getElementById('resultsHeader').textContent = headerText;
             
             const html = articles.map(article => {
-                // Manejar ambos formatos: Title y "Title"
-                const title = article.Title || article["Title"] || "Sin título";
-                const link = article.Link || article["Link"] || "#";
-                
-                const badge = article.relevance ? `<div class="relevance-badge">${article.relevance}% Relevante</div>` : '';
+                const badge = article.relevance ? <div class="relevance-badge">${article.relevance}% Relevante</div> : '';
                 const why = article.matchReasons && article.matchReasons.length > 0 
-                    ? `<div class="why-relevant"><strong>Por qué es relevante:</strong> ${article.matchReasons.join(', ')}</div>` 
+                    ? <div class="why-relevant"><strong>Por qué es relevante:</strong> ${article.matchReasons.join(', ')}</div> 
                     : '';
 
                 return `
                     <div class="article-card">
                         ${badge}
-                        <h3 class="article-title">${title}</h3>
+                        <h3 class="article-title">${article.Title}</h3>
                         ${why}
-                        <a href="${link}" target="_blank" class="article-link">Ver Artículo Completo</a>
+                        <a href="${article.Link}" target="_blank" class="article-link">Ver Artículo Completo</a>
                     </div>
                 `;
             }).join('');
@@ -837,14 +573,7 @@
         });
 
         createStars();
-        initKnowledgeGraph();
-        
-        // Cargar artículos iniciales manejando ambos formatos
-        const initialArticles = ARTICLES.slice(0, 20).map(article => ({
-            Title: article.Title || article["Title"] || "",
-            Link: article.Link || article["Link"] || ""
-        }));
-        displayResults(initialArticles, 'Primeros 20 Artículos');
+        displayResults(ARTICLES.slice(0, 20), 'Primeros 20 Artículos');
     </script>
 </body>
 </html>
